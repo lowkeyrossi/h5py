@@ -1,26 +1,40 @@
 #!/bin/bash
-
 set -eo pipefail
-
 if [[ "$1" == "" ]] ; then
     echo "Usage: $0 <PROJECT_PATH>"
     exit 1
 fi
 PROJECT_PATH="$1"
 
+# Detect architecture
+IS_ARM64=false
+if [[ "$CIBW_ARCHS" == *"ARM64"* ]] || [[ "$CIBW_ARCHS" == *"arm64"* ]] || [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
+    IS_ARM64=true
+fi
+
+# Set architecture-specific variables
+if [[ "$IS_ARM64" == true ]]; then
+    ZLIB_PACKAGE="zlib-msvc-arm64"
+    HDF5_VSVERSION="17-arm64"
+    ARCH_SUFFIX="arm64"
+else
+    ZLIB_PACKAGE="zlib-msvc-x64"
+    HDF5_VSVERSION="17-64"
+    ARCH_SUFFIX="x64"
+fi
+
 # nuget
-nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
-EXTRA_PATH="$PROJECT_PATH\zlib-msvc-x64\build\native\bin_release"
+nuget install "$ZLIB_PACKAGE" -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
+EXTRA_PATH="$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\bin_release"
 export PATH="$PATH:$EXTRA_PATH"
-export CL="/I$PROJECT_PATH\zlib-msvc-x64\build\native\include"
-export LINK="/LIBPATH:$PROJECT_PATH\zlib-msvc-x64\build\native\lib_release"
-export ZLIB_ROOT="$PROJECT_PATH\zlib-msvc-x64\build\native"
+export CL="/I$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\include"
+export LINK="/LIBPATH:$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\lib_release"
+export ZLIB_ROOT="$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native"
 
 # HDF5
 export HDF5_VERSION="1.14.6"
-export HDF5_VSVERSION="17-64"
-export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION"
-
+export HDF5_VSVERSION="$HDF5_VSVERSION"
+export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION-$ARCH_SUFFIX"
 pip install requests
 python $PROJECT_PATH/ci/get_hdf5_win.py
 
