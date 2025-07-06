@@ -8,20 +8,21 @@ fi
 
 PROJECT_PATH="$1"
 
-echo "========== Detecting Architecture =========="
 
-# Log system information
+echo "========== Detecting Target Architecture =========="
+echo "CIBW_ARCH: $CIBW_ARCH"
+echo "CIBW_ARCHS: $CIBW_ARCHS"
 echo "uname -m: $(uname -m)"
 echo "PROCESSOR_ARCHITECTURE: $PROCESSOR_ARCHITECTURE"
-echo "CIBW_ARCHS: $CIBW_ARCHS"
 
-# Detect architecture
-IS_ARM64=false
-if [[ "$CIBW_ARCHS" == *"ARM64"* ]] || [[ "$CIBW_ARCHS" == *"arm64"* ]] || \
-   [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]] || \
-   [[ "$PROCESSOR_ARCHITECTURE" == "ARM64" ]]; then
+# Detect ARM64 target (not host)
+if [[ "$CIBW_ARCH" == "ARM64" ]] || [[ "$CIBW_ARCHS" == *"ARM64"* ]] || [[ "$CIBW_ARCHS" == *"arm64"* ]]; then
     IS_ARM64=true
+else
+    IS_ARM64=false
 fi
+
+echo "Detected ARM64 target: $IS_ARM64"
 
 echo "Detected ARM64: $IS_ARM64"
 
