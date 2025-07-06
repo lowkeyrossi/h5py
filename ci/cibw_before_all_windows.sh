@@ -14,22 +14,36 @@ fi
 
 # Set architecture-specific variables
 if [[ "$IS_ARM64" == true ]]; then
-    ZLIB_PACKAGE="zlib-msvc-arm64"
+    VCPKG_TRIPLET="arm64-windows"
     HDF5_VSVERSION="17-arm64"
     ARCH_SUFFIX="arm64"
 else
-    ZLIB_PACKAGE="zlib-msvc-x64"
+    VCPKG_TRIPLET="x64-windows"
     HDF5_VSVERSION="17-64"
     ARCH_SUFFIX="x64"
 fi
 
-# nuget
-nuget install "$ZLIB_PACKAGE" -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
-EXTRA_PATH="$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\bin_release"
-export PATH="$PATH:$EXTRA_PATH"
-export CL="/I$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\include"
-export LINK="/LIBPATH:$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native\\lib_release"
-export ZLIB_ROOT="$PROJECT_PATH\\$ZLIB_PACKAGE\\build\\native"
+# Install zlib via vcpkg or nuget
+if [[ "$IS_ARM64" == true ]]; then
+    # Use vcpkg for ARM64
+    git clone https://github.com/Microsoft/vcpkg.git "$PROJECT_PATH/vcpkg"
+    "$PROJECT_PATH/vcpkg/bootstrap-vcpkg.bat"
+    "$PROJECT_PATH/vcpkg/vcpkg.exe" install zlib:$VCPKG_TRIPLET
+    ZLIB_ROOT="$PROJECT_PATH\\vcpkg\\installed\\$VCPKG_TRIPLET"
+    EXTRA_PATH="$ZLIB_ROOT\\bin"
+    export PATH="$PATH:$EXTRA_PATH"
+    export CL="/I$ZLIB_ROOT\\include"
+    export LINK="/LIBPATH:$ZLIB_ROOT\\lib"
+    export ZLIB_ROOT="$ZLIB_ROOT"
+else
+    # Use nuget for x64
+    nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
+    EXTRA_PATH="$PROJECT_PATH\\zlib-msvc-x64\\build\\native\\bin_release"
+    export PATH="$PATH:$EXTRA_PATH"
+    export CL="/I$PROJECT_PATH\\zlib-msvc-x64\\build\\native\\include"
+    export LINK="/LIBPATH:$PROJECT_PATH\\zlib-msvc-x64\\build\\native\\lib_release"
+    export ZLIB_ROOT="$PROJECT_PATH\\zlib-msvc-x64\\build\\native"
+fi
 
 # HDF5
 export HDF5_VERSION="1.14.6"
