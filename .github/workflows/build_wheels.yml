@@ -74,9 +74,9 @@ jobs:
         with:
           python-version: 3.12
         if: runner.os == 'Windows'
-      - run: |
-          export CIBW_ARCHS=${{ matrix.arch }}
-          bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
+      - shell: bash
+        run: |
+          CIBW_ARCHS=${{ matrix.arch }} bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         if: runner.os == 'Windows'
 
 
