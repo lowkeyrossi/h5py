@@ -55,6 +55,15 @@ else
     export ZLIB_ROOT="$ZLIB_ROOT"
 fi
 
+if [[ "$IS_ARM64" == true ]]; then
+    # vcpkg uses 'lib', not 'lib_release'
+    export LINK="/LIBPATH:$ZLIB_ROOT\\lib"
+else
+    # nuget uses 'lib_release'
+    export LINK="/LIBPATH:$ZLIB_ROOT\\lib_release"
+fi
+
+
 # Debug output
 echo ""
 echo "========== DEBUG: Environment Variables =========="
