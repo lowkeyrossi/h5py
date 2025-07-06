@@ -19,18 +19,13 @@ concurrency:
 
 on:
   # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
-  schedule:
-    - cron: '23 1 * * *'
-  # Run on demand with workflow dispatch
   workflow_dispatch:
   # Run on all PRs
   pull_request:
   # Run on tags
   push:
     branches:
-      - master
-    tags:
-      - '*'
+      - Woa_python
 
 permissions:
   actions: read
@@ -50,6 +45,8 @@ jobs:
             arch: aarch64
           - os: windows-latest
             arch: AMD64
+          - os: windows-11-arm
+            arch: ARM64
           - os: macos-14
             arch: arm64
           - os: macos-13
@@ -145,7 +142,6 @@ jobs:
           fi
           echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
           echo "generate=$GENERATE" >> $GITHUB_OUTPUT
-
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@v2
         # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
