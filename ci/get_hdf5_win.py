@@ -84,53 +84,86 @@ def download_hdf5(version, outfile):
 
 def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
                dl_zip):
+    import time
+    from shutil import rmtree
+    
+    old_dir = getcwd()
+    hdf5_extract_path = None
+    build_dir = None
+    
     try:
         run(["cmake", "--version"])  # Show what version of cmake we'll use
-        with TemporaryDirectory() as hdf5_extract_path:
-            generator_args = (
-                ["-G", cmake_generator]
-                if cmake_generator is not None
-                else []
-            )
-            # Add ARM64 architecture specification for Visual Studio 2022
-            if cmake_generator == "Visual Studio 17 2022" and environ.get("HDF5_VSVERSION") == "17-arm64":
-                generator_args.extend(["-A", "ARM64"])
-            
-            prefix_args = CMAKE_HDF5_LIBRARY_PREFIX if use_prefix else []
+        
+        # Create temporary directories manually for better cleanup control
+        from tempfile import mkdtemp
+        hdf5_extract_path = mkdtemp()
+        build_dir = mkdtemp()
+        
+        generator_args = (
+            ["-G", cmake_generator]
+            if cmake_generator is not None
+            else []
+        )
+        # Add ARM64 architecture specification for Visual Studio 2022
+        if cmake_generator == "Visual Studio 17 2022" and environ.get("HDF5_VSVERSION") == "17-arm64":
+            generator_args.extend(["-A", "ARM64"])
+        
+        prefix_args = CMAKE_HDF5_LIBRARY_PREFIX if use_prefix else []
 
-            with ZipFile(hdf5_file) as z:
-                z.extractall(hdf5_extract_path)
+        with ZipFile(hdf5_file) as z:
+            z.extractall(hdf5_extract_path)
 
-            old_dir = getcwd()
+        chdir(build_dir)
+        cfg_cmd = CMAKE_CONFIGURE_CMD + [
+            get_cmake_install_path(install_path),
+            get_cmake_config_path(hdf5_extract_path, dl_zip),
+        ] + generator_args + prefix_args
+        print("Configuring HDF5 version {version}...".format(version=version))
+        print(' '.join(cfg_cmd), file=stderr)
+        run(cfg_cmd, check=True)
 
-            with TemporaryDirectory() as new_dir:
-                chdir(new_dir)
-                cfg_cmd = CMAKE_CONFIGURE_CMD + [
-                    get_cmake_install_path(install_path),
-                    get_cmake_config_path(hdf5_extract_path, dl_zip),
-                ] + generator_args + prefix_args
-                print("Configuring HDF5 version {version}...".format(version=version))
-                print(' '.join(cfg_cmd), file=stderr)
-                run(cfg_cmd, check=True)
+        build_cmd = CMAKE_BUILD_CMD + [
+            '.',
+        ] + CMAKE_INSTALL_ARG
+        print("Building HDF5 version {version}...".format(version=version))
+        print(' '.join(build_cmd), file=stderr)
+        run(build_cmd, check=True)
 
-                build_cmd = CMAKE_BUILD_CMD + [
-                    '.',
-                ] + CMAKE_INSTALL_ARG
-                print("Building HDF5 version {version}...".format(version=version))
-                print(' '.join(build_cmd), file=stderr)
-                run(build_cmd, check=True)
-
-                print("Installed HDF5 version {version} to {install_path}".format(
-                    version=version, install_path=install_path,
-                ), file=stderr)
-                chdir(old_dir)
-    except OSError as e:
-        if e.winerror == 145:
-            print("Hit the rmtree race condition, continuing anyway...", file=stderr)
-        else:
-            raise
-    for f in glob(pjoin(install_path, 'bin/*.dll')):
-        copy(f, pjoin(install_path, 'lib'))
+        print("Installed HDF5 version {version} to {install_path}".format(
+            version=version, install_path=install_path,
+        ), file=stderr)
+        
+    except Exception as e:
+        print(f"Build failed with error: {e}", file=stderr)
+        raise
+    finally:
+        # Change back to original directory before cleanup
+        chdir(old_dir)
+        
+        # Manual cleanup with retry logic for Windows file locking issues
+        def cleanup_with_retry(path, max_retries=5):
+            if path and exists(path):
+                for attempt in range(max_retries):
+                    try:
+                        rmtree(path, ignore_errors=False)
+                        break
+                    except (OSError, PermissionError) as e:
+                        if attempt < max_retries - 1:
+                            print(f"Cleanup attempt {attempt + 1} failed for {path}: {e}", file=stderr)
+                            time.sleep(0.5)  # Wait before retry
+                        else:
+                            print(f"Warning: Could not clean up {path} after {max_retries} attempts: {e}", file=stderr)
+                            print("This is a known Windows file locking issue and can be ignored in CI.", file=stderr)
+        
+        cleanup_with_retry(build_dir)
+        cleanup_with_retry(hdf5_extract_path)
+    
+    # Copy DLLs to lib directory
+    try:
+        for f in glob(pjoin(install_path, 'bin/*.dll')):
+            copy(f, pjoin(install_path, 'lib'))
+    except Exception as e:
+        print(f"Warning: Could not copy DLLs: {e}", file=stderr)
 
 
 def get_cmake_config_path(extract_point, zip_file):
