@@ -52,6 +52,7 @@ VSVERSION_TO_GENERATOR = {
     "15-64": "Visual Studio 15 2017 Win64",
     "16-64": "Visual Studio 16 2019",
     "17-64": "Visual Studio 17 2022",
+    "17-arm64": "Visual Studio 17 2022 ARM64"
 }
 
 
