@@ -11,6 +11,7 @@ import os
 import os.path as osp
 import shutil
 import sys
+import platform
 import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
