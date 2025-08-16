@@ -16,9 +16,11 @@ from glob import glob
 from subprocess import run
 from zipfile import ZipFile
 import requests
+import platform
 
 HDF5_URL = "https://github.com/HDFGroup/hdf5/archive/refs/tags/{zip_file}"
 ZLIB_ROOT = environ.get('ZLIB_ROOT')
+arch = platform.machine().lower()
 
 CI_DIR = dirname(abspath(__file__))
 
@@ -28,7 +30,7 @@ CMAKE_CONFIGURE_CMD = [
     "-DHDF5_BUILD_TOOLS:BOOL=OFF", "-DBUILD_TESTING:BOOL=OFF",
 ]
 if ZLIB_ROOT:
-    if ARCH.lower() == "arm64":
+    if arch in ("arm64", "aarch64"):
         # vcpkg layout
         CMAKE_CONFIGURE_CMD += [
             "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
