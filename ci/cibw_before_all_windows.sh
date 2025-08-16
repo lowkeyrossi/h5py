@@ -19,6 +19,7 @@ if [[ "$ARCH" == "ARM64" ]]; then
     EXTRA_PATH="$ZLIB_ROOT/bin"
     export CL="/I$ZLIB_ROOT/include"
     export LINK="/LIBPATH:$ZLIB_ROOT/lib"
+    export HDF5_VSVERSION="17-arm64"
 else
     # NuGet for x64
     nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
@@ -26,6 +27,7 @@ else
     EXTRA_PATH="$ZLIB_ROOT/bin_release"
     export CL="/I$ZLIB_ROOT/include"
     export LINK="/LIBPATH:$ZLIB_ROOT/lib_release"
+    export HDF5_VSVERSION="17-64"
 fi
 
 export PATH="$PATH:$EXTRA_PATH"
@@ -33,7 +35,6 @@ export ZLIB_ROOT
 
 # HDF5
 export HDF5_VERSION="1.14.6"
-export HDF5_VSVERSION="17-64"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION"
 
 pip install requests
