@@ -27,7 +27,7 @@ def main():
         if zlib_root:
             arch = platform.machine().lower()
             if arch in ("arm64", "aarch64"):
-                f = pjoin(zlib_root, 'bin', 'zlib.dll')
+                f = pjoin(zlib_root, 'bin', 'zlib1.dll')
             elif arch in ("amd64", "x86_64"):
                 f = pjoin(zlib_root, 'bin_release', 'zlib.dll')
             else:
