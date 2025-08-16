@@ -30,12 +30,8 @@ def main():
                 f = pjoin(zlib_root, 'bin', 'zlib1.dll')
             elif arch in ("amd64", "x86_64"):
                 f = pjoin(zlib_root, 'bin_release', 'zlib.dll')
-            else:
-                f = None
-
-            if f and os.path.exists(f):
-                copy(f, pjoin(sitepackagesdir, 'h5py', 'zlib.dll'))
-                print("Copied", f)
+            copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))
+            print("Copied", f)
 
         print("In installed h5py:", sorted(os.listdir(pjoin(sitepackagesdir, 'h5py'))))
 
