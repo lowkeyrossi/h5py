@@ -23,7 +23,7 @@ def find_dlls():
         print("ZLIB_ROOT", zlib_root)
         arch = platform.machine().lower()
         if arch in ("arm64", "aarch64"):
-            yield os.path.join(zlib_root, 'bin', 'zlib.dll')
+            yield os.path.join(zlib_root, 'bin', 'zlib1.dll')
         elif arch in ("amd64", "x86_64"):
             yield os.path.join(zlib_root, 'bin_release', 'zlib.dll')
 
