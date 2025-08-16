@@ -28,7 +28,7 @@ on:
   # Run on tags
   push:
     branches:
-      - master
+      - win_arm64
     tags:
       - '*'
 
@@ -44,16 +44,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: ubuntu-24.04-arm
-            arch: aarch64
-          - os: windows-latest
-            arch: AMD64
-          - os: macos-14
-            arch: arm64
-          - os: macos-13
-            arch: x86_64
+          # - os: ubuntu-latest
+          #   arch: x86_64
+          # - os: ubuntu-24.04-arm
+          #   arch: aarch64
+          # - os: windows-latest
+          #   arch: AMD64
+          - os: windows-11-arm
+            arch: ARM64
+          # - os: macos-14
+          #   arch: arm64
+          # - os: macos-13
+          #   arch: x86_64
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
